@@ -79,4 +79,29 @@ describe('calculateEnergySavings', () => {
       };
       expect(calculateEnergySavings(usageProfile)).toEqual(MAX_IN_PERIOD - 320);
     });
+    // New test cases added
+    it('should ignore auto-off if it occurs after manual off', () => {
+      const usageProfile = {
+        initial: 'on',
+        events: [
+          { state: 'off', timestamp: 200 },
+          { state: 'auto-off', timestamp: 300 }, // should be ignored
+        ],
+      };
+      expect(calculateEnergySavings(usageProfile)).toEqual(0);
+    });
+    it('should ignore auto-off if device is already off', () => {
+      const usageProfile = {
+        initial: 'off',
+        events: [
+          { state: 'on', timestamp: 100 },
+          { state: 'off', timestamp: 200 },
+          { state: 'auto-off', timestamp: 300 }, // already off, no savings
+          { state: 'on', timestamp: 400 },
+          { state: 'auto-off', timestamp: 500 }, // savings from 500 onward
+        ],
+      };
+      expect(calculateEnergySavings(usageProfile)).toEqual(MAX_IN_PERIOD - 500);
+    });
+        
   });

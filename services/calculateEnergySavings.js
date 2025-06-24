@@ -43,8 +43,18 @@ function calculateEnergySavings(profile) {
       }
 
       // If new state is auto-off and system was not already in auto-off
-      if (newState === 'auto-off' && state !== 'auto-off') {
+      if (newState === 'auto-off' && state === 'on') {
         autoOffStart = timestamp;
+      }
+
+      // If new state is 'off' after 'auto-off', ignore it
+      if (newState === 'off' && state === 'auto-off') {
+        continue;
+      }
+
+      // If auto-off follows off, ignore the auto-off
+      if (newState === 'auto-off' && state !== 'on') {
+        continue;
       }
 
       // Update current state and timestamp

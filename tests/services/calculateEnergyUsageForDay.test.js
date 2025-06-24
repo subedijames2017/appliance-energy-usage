@@ -89,4 +89,62 @@ describe('calculateEnergyUsageForDay', () => {
         /must be an integer/
       );
     });
+    // new test cased added 
+
+    it('should split usage across day boundary correctly', () => {
+      const profile = {
+        initial: 'off',
+        events: [
+          { state: 'on', timestamp: 1400 },   // Day 1
+          { state: 'off', timestamp: 1600 },  // Day 2
+        ],
+      };
+    
+      // Day 1 usage: 1440 - 1400 = 40
+      // Day 2 usage: 1600 - 1440 = 160
+      expect(calculateEnergyUsageForDay(profile, 1)).toEqual(40);
+      expect(calculateEnergyUsageForDay(profile, 2)).toEqual(160);
+    });
+
+    it('should calculate usage correctly when appliance stays on across days', () => {
+      const profile = {
+        initial: 'off',
+        events: [
+          { state: 'on', timestamp: 100 }, // Day 1
+        ],
+      };
+    
+      // Day 1: from 100 to 1440 = 1340
+      // Day 2: 1440
+      expect(calculateEnergyUsageForDay(profile, 1)).toEqual(1340);
+      expect(calculateEnergyUsageForDay(profile, 2)).toEqual(1440);
+    });
+    it('should handle repeated "on" events without resetting usage', () => {
+      const profile = {
+        initial: 'off',
+        events: [
+          { state: 'on', timestamp: 100 },
+          { state: 'on', timestamp: 300 }, // Should not reset anything
+          { state: 'off', timestamp: 700 },
+        ],
+      };
+    
+      // Usage from 100 to 700 = 600
+      expect(calculateEnergyUsageForDay(profile, 1)).toEqual(600);
+    });
+    
+    it('should ignore redundant "off" events', () => {
+      const profile = {
+        initial: 'on',
+        events: [
+          { state: 'off', timestamp: 200 },
+          { state: 'off', timestamp: 300 }, // Redundant
+          { state: 'on', timestamp: 500 },
+          { state: 'off', timestamp: 700 },
+        ],
+      };
+    
+      // Usage = 0–200 and 500–700 => 200 + 200 = 400
+      expect(calculateEnergyUsageForDay(profile, 1)).toEqual(400);
+    }); 
   });
